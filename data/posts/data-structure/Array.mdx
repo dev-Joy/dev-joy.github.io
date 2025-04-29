@@ -1,0 +1,96 @@
+---
+title: Array
+category: data-structure
+thumbnail: /images/thumbnails/array.png
+date: 2024-07-03 21:32:35
+---
+
+Time Complexity: O(N)  
+Space Complexity: O(N)
+값을 index로 접근
+
+## Python
+
+```python
+A.append, A.pop # O(1) 평균
+A.insert, A.remove # O(n) Worst Case
+A.index, A.count # O(n) Worst Case
+A.pop() # 평균 O(1)
+A.pop(2) # O(n) Worst Case
+# 평균 O(1) Hashtable
+```
+
+list 리스트: 용량 자동조절(dynamic array)
+
+```python
+import sys
+A = []                  # 빈 리스트
+print(sys.getsizeof(A)) # 28bytes
+A.append(10)            # A = [10]
+print(sys.getsizeof(A)) # 44bytes
+```
+
+list class:
+capacity: 용량
+n: 현재 저장된 값의 개수
+
+```python append구현
+A.append(X):
+if A.n < A.capacity:
+  A[n] = x
+  A.n = n + 1
+else: A.n == A.capacity
+B = A.capacity*2 #A.capacity*2 크기의 리스트 새로 할당
+for i in range(n):
+  B[i] = A[i] # O(n)
+del A
+A = B
+A[n] = x
+A.n = n+1
+```
+
+A[0] = 2를 넣으면
+A[0]의 주소가 2가 저장되어있는 주소를 가르킴
+A[0]+1을 하면 A[0] = 3이 됨
+그러면 3이 저장되어있는 새로운 주소를 가르킴
+
+```python
+list.append(값)
+append: 맨 뒤에 값 추가
+
+list.pop()
+pop: 맨뒤의 값을 지우고 리턴
+pop(index): A[index]를 제거하고 리턴
+
+list.insert(index, value)
+list[index]에 value를 삽입
+
+list.remove(value): list에서 value제거
+
+list.index(value), list.count(value)
+```
+
+## JavaScript
+
+- push, pop, unshift, shift
+- concat
+- indexOf, lastIndexOf, includes
+
+-join
+-split
+
+-splice: 배열자체를 변형
+-slice(start, end) : end exclusive하다
+
+Array 배열
+
+- map, forEach, filter, find, findIndex, reduce, every, some 등 내장 iteration 메소드를 활용한다.
+- map : array → array
+- forEach: array 한개씩 순회하여 콜백 호출
+- filter: 필터링
+- find: 한개 찾아 반환
+- findIndex: 한개 찾아 인덱스 반환
+- reduce: array → single value
+- reduceRight: 배열거꾸로 부터 누적
+- every: 모두 만족하면 true 값을 반환
+- some: 한개라도 만족하면 true 값을 반환

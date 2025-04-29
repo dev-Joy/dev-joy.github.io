@@ -1,0 +1,144 @@
+---
+title: Nginx Reverse Proxy 설정
+category: network
+thumbnail: /images/thumbnails/nginx.png
+date: 2024-11-05 15:28:36
+---
+
+JAVA 파일을 빌드하여 `Root.war` 파일을 생성합니다.
+
+```shell terminal
+# bootWar
+./gradlew bootWar
+# War
+./gradlew war
+```
+
+## Tomcat 설정
+
+[Tomcat](https://tomcat.apache.org/)
+
+1. `apache-tomcat-10.1.28/webapps/` 에 ROOT.war를 넣어줍니다.
+2. `apache-tomcat-10.1.28/bin` 폴더로 이동하여 `setenv.sh` 파일을 만듭니다.
+3. 환경 변수를 설정합니다.
+
+```bash setenv.sh
+export JAVA_OPTS="$JAVA_OPTS -Dspring.profiles.active=local"
+export CATALINA_OPTS="$CATALINA_OPTS -Dspring.application.batch.option=true"
+
+# 환경 변수 설정
+export SECRET_KEY="abcdefghijklmnop"
+export DATABASENAME="postgres"
+export USERNAME="postgres"
+export PASSWORD="postgres"
+
+# spring.datasource 관련 환경 변수 설정
+export DB_HOST="127.0.0.1"
+export DB_PORT="5432"
+
+# Spring Boot 애플리케이션에서 환경 변수를 참조하도록 설정
+export JAVA_OPTS="$JAVA_OPTS -Dspring.config.import=classpath:application-common.properties"
+export JAVA_OPTS="$JAVA_OPTS -Dspring.datasource.url=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DATABASENAME}"
+export JAVA_OPTS="$JAVA_OPTS -Dspring.datasource.username=${USERNAME}"
+export JAVA_OPTS="$JAVA_OPTS -Dspring.datasource.password=${PASSWORD}"
+
+# Hibernate 설정
+export JAVA_OPTS="$JAVA_OPTS -Dspring.jpa.hibernate.ddl-auto=update"
+
+# Main Setting
+export JAVA_OPTS="$JAVA_OPTS -Ddataportal.mainsetting.batchenabled=true"
+export JAVA_OPTS="$JAVA_OPTS -Ddataportal.mainsetting.website-dbms=POSTGRESQL"
+export JAVA_OPTS="$JAVA_OPTS -Ddataportal.mainsetting.website-host=${DB_HOST}"
+export JAVA_OPTS="$JAVA_OPTS -Ddataportal.mainsetting.website-port=${DB_PORT}"
+export JAVA_OPTS="$JAVA_OPTS -Ddataportal.mainsetting.website-database-name=website"
+export JAVA_OPTS="$JAVA_OPTS -Ddataportal.mainsetting.website-user-name=admin"
+export JAVA_OPTS="$JAVA_OPTS -Ddataportal.mainsetting.website-password=admin"
+```
+
+1. `apache-tomcat-10.1.28/bin` 폴더로 이동하여 `catalina.sh` 파일을 vim 또는 editor로 엽니다.
+
+2. `JAVA_HOME` 설정을 해줍니다. (Tomcat 서버가 실행될 때 필요한 JAVA와 관련한 위치를 연결하기 위해서)
+
+```shell catalina.sh
+# Oracle JAVA 설치시 echo $PATH
+# 또는
+# brew로 JAVA 설치시
+
+/usr/libexec/java_home
+```
+
+참고: [mac JAVA_HOME 환경변수 설정](https://velog.io/@soyul2823/Mac-%EC%9E%90%EB%B0%94-%ED%99%98%EA%B2%BD%EB%B3%80%EC%88%98-%EC%84%A4%EC%A0%95%ED%95%98%EA%B8%B0)
+
+3. `catalina.sh`파일에 아래를 추가해줍니다.
+
+```
+# OS specific support. $var _must_ be set to either true or false.
+# Set JAVA_HOME and update PATH
+
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+export PATH=$JAVA_HOME/bin:$PATH
+```
+
+4. Tomcat을 실행합니다.
+
+tomcat 실행시 `Root.war`가 자동으로 풀립니다.
+
+```shell
+cd apache-tomcat-10.1.28/bin
+./startup.sh
+```
+
+# **Nginx와 같은 웹 서버를 왜 사용할까요?**
+
+- 클라이언트의 요청 처리를 분산시킬 수 있는 로드 밸런스를 사용함으로써 효율적인 처리를 합니다.
+- 정적파일을 다이렉트로 제공해주기 때문에 백엔드 서버에 부담을 주지 않습니다.
+- 클라이언트는 Ngnix 포트로만 백엔드 서버에 접근할 수 있어 보안에 도움이 됩니다.
+
+# **개념설명**
+
+**리버스 프록시**란
+
+클라이언트 요청을 대신 받아 **내부 서버로 전달**해주는 것을 리버스 프록시(Reverse Proxy) 라고 합니다.
+
+**프록시**란 대리라는 의미로,
+
+**정보를 대신 전달해주는 주체**라고 생각하면 되는데, 만약 이 프록시 없이 웹 서버를 운영한다고 가정합니다.
+
+- 사용자 앞단에 있으면 Forward Proxy
+- 서버 앞단에 있으면 Reverse Proxy
+
+localhost:3000
+
+라고 하는 웹서버를 열어서 운영했을 때, 사용자가 갑자기 많아지거나,
+
+웹서버가 그대로 노출되어 있기 때문에 보안적으로 위험성이 있겠죠?
+
+nginx를 사용하면 로드 밸런싱으로 부하를 줄여줄 수 있고,
+
+분산 처리 또한 가능하며 웹서버의 SSL 인증도 적용할 수 있습니다.
+
+따라서 아래와 같이 **사용자 -> nginx -> 웹서버**로 구성해서
+
+사용자의 요청을 nginx가 대신 웹서버로 전달해주도록 구성합니다.
+
+# **Reverse Proxy 사용이유**
+
+1. 동시성 : 다중 연결을 더 잘 처리할 수 있는 역방향 프록시를 추가하면 백엔드 서버 성능이 크게 향상될 수 있다.
+2. 복원력 : 백엔드 서버의 상태를 모니터링하고 서비스가 재개될 때까지 실패한 서버에 대한 요청 전송을 중지할 수 있다. 역방향 프록시가 여전히 작동 중인 백엔드 서버에 요청을 자동으로 보내기 때문에 클라이언트에는 오류가 표시되지 않는다.
+3. 확장성 : 역방향 프록시는 백엔드 서버 그룹에 대한 단일 “공개 얼굴"이기 때문에 변화하는 트래픽 부하에 따라 서버를 추가 및 제거할 수 있다.
+4. 레이어 7라우팅 : 역방향 프록시는 모든 서버로 향하는 트래픽을 보고 필요에 따라 요청과 응답을 수정하여 각 요청을 보낼 위치에 대한 지능적인 결정을 내릴 수 있다. 요청의 특정 HTTP 헤더, URL의 일부, 클라이언트의 지리적 위치 등에 따라 라우팅 결정을 내릴 수 있다.
+5. 캐싱 : 역방향 프록시는 캐싱을 수행하기에 좋은 장소이다. 일반적으로 모든 요청을 백엔드 서버로 보내고 각 백엔드 서버가 자체 캐시를 구축하도록 하는 것보다 콘텐츠를 개시하는 것이 훨씬 더 효율적이다.
+6. 기타 기능 : 역방향 프록시는 백엔드 서버 앞에 앉음으로써 대역폭 또는 요청 속도에 따른 트래픽 형성, 연결 제한, 다양한 인증 체계와의 통합, 활동 모니터링 등과 같은 다른 기능도 수행할 수 있다.
+
+# **포트**
+
+- 프론트엔드(Web) : 3000 port (React Local Port)
+- 백엔드(Server, API): 8080 port (Tomcat Default Port)
+
+# **Ngix reverse proxy 구성**
+
+[![reverse-proxy](/posts/Nginx-Reverse-Proxy-설정/reverse-proxy.png)](https://velog.io/@chickenfondue/nginx-docker-compose%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%9C-%EB%A6%AC%EB%B2%84%EC%8A%A4-%ED%94%84%EB%A1%9D%EC%8B%9C-%EA%B5%AC%EC%84%B1)
+
+출처:
+
+- [https://velog.io/@chickenfondue](https://velog.io/@chickenfondue)

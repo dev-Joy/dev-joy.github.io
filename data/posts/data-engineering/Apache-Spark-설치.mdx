@@ -1,0 +1,90 @@
+---
+title: Apache Spark 설치
+category: data-engineering
+thumbnail: /images/thumbnails/Apache-Spark.png
+date: 2022-11-03 20:56:27
+---
+
+## Window 운영체제
+
+### Anaconda 설치하기
+
+[Anaconda](https://www.anaconda.com/products/distribution) Prompt에서 python 3.8 이상인지 확인
+
+`where python` 으로 Python이 어디에 설치되어 있는지 확인
+
+pip : python package installer  
+`where pip`으로 pip이 어디에 있는지 확인
+
+`pip --version`으로 pip 버전 확인
+
+### JAVA
+
+`java --version`으로 버전 확인
+Extended Support Until이 긴 [JAVA](https://www.oracle.com/kr/java/technologies/downloads/) 8(LTS)을 다운받는다
+
+### SPARK
+
+![spark](/posts/Apache-Spark-설치/spark.png)
+![spark_download](/posts/Apache-Spark-설치/spark_download.png)
+[Spark](https://spark.apache.org/downloads.html) 다운받은 파일을 원하는 위치에 이동한다.
+![spark_directory](/posts/Apache-Spark-설치/spark_directory.png)
+
+### Hadoop
+
+[Hadoop](https://github.com/cdarlint/winutils)-2.7.7을 사용
+다운받은 파일을 원하는 위치에 이동한다.
+![hadoop_directory](/posts/Apache-Spark-설치/hadoop_directory.png)
+
+### Pyspark
+
+Anaconda Prompt에서 `pip install pyspark`
+
+## 환경변수 설정
+
+<Callout type='danger'>
+  주의사항: 파일경로에 빈칸이 존재하면 Error가 발생
+</Callout>
+
+`
+![system_enviroment](/posts/Apache-Spark-설치/system_enviroment.png) JAVA_HOME D:\ProgramFiles\Java\java-14-openjdk-14.0.2.12\bin
+
+HADOOP_HOME  
+D:\ProgramFiles\Hadoop
+
+SPARK_HOME
+D:\ProgramFiles\Spark\spark-3.2.0-bin-hadoop2.7
+
+PYSPARK_PYTHON  
+`where python`을 해서 D:\ProgramFiles\Anaconda3\python.exe
+
+**환경변수 > 변수: Path를 선택하여 [편집]버튼을 누르고 아래와 같이 추가**
+![path](/posts/Apache-Spark-설치/path.png)
+![path_add](/posts/Apache-Spark-설치/path_add.png)
+
+## Mac 운영체제
+
+1. [Anaconda](https://www.anaconda.com/products/distribution) 설치하기
+
+2. `which python` 으로 경로 찾기
+
+3. [Homebrew](https://brew.sh/) 설치
+
+```shell
+#JAVA 버전확인
+java -version
+# JAVA8 설치
+brew install --cask adoptopenjdk8
+# SCALA 설치
+brew install scala
+# Apache Spark 설치
+brew install apache-spark
+# pip 버전확인
+pip --version
+# pyspark 설치
+pip install pyspark
+# pyspark 터미널 뜨는지 확인
+pyspark
+```
+
+![pyspark](/posts/Apache-Spark-설치/pyspark.png)

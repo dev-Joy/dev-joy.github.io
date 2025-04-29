@@ -1,0 +1,100 @@
+---
+title: CSV 파일 다루기
+category: data-engineering
+thumbnail: /images/thumbnails/Apache-Hadoop.png
+date: 2024-01-05 22:45:58
+---
+
+## Header 즉 첫번째 줄 linux에서 삭제하기
+
+```shell
+
+# 덮어쓰기 전의 파일을 확장자.bak를 붙여서 보관하는 것이 가능하다
+sed -i.bak -e '/^#/d' config.txt
+
+# DATA.csv에서 첫번째 줄 제거하여 DATA_NO_HEADER.csv 생성
+sed '1d' DATA.csv > DATA_NO_HEADER.csv
+
+# 동일한 이름으로 첫번째 줄 제거
+sed -i '1d' DATA.csv
+
+
+# 패턴을 포함하는 선을 삭제
+vi DATA.csv
+:g/<pattern>/d
+:wq
+
+# '#'문자가 포함된 라인 삭제하면서 공백 제거된 내용만 출력
+sed '/#/d' jupyterhub_config.py | sed '/^$/d'
+
+
+#덮어쓰기
+cat > 명령어는 덮어쓰기 명령어이다.
+# 이어쓰기
+. cat >> [파일 경로 / 이름]
+
+```
+
+1. cat [ 파일 경로 / 이름 ]
+
+   - 파일을 열어 내용을 출력
+
+2. cat > [ 파일 경로 / 이름 ]
+
+   - 같은 이름의 파일이 없는 경우 : 파일 새로 만들고 내용 입력하기
+
+   - 같은 이름의 파일이 있는 경우 : 파일 덮어쓰고 내용 새로 입력하기
+
+3. cat >> [ 파일 경로 / 이름 ]
+
+   - 같은 이름의 파일이 없는 경우 : 파일 새고 만들고 내용 입력하기
+
+   - 같은 이름의 파일이 있는 경우 : 기존 파일의 내용 밑에 ﻿이어쓰기
+
+### 첫줄 일괄 삭제해서
+
+find . -type f -name "\*.csv" -exec sed -i "-new" '1d' {} \;
+
+## CSV
+
+> Comma Separated Values
+
+## HBase와 Hive 차이는?
+
+- HBase는 NoSQL 데이터베이스이고 Hive는 하둡잡을 실행하는 DW 프레임워크이다.
+- HBase는 HDFS위에서 동작하고, Hive는 MapReduce 위에서 동작한다.
+
+- **Schema flexibility:** 다양한 구조와 포맷의 데이터를 처리하고 저장합니다.
+- **SQL-like queries:** Hadoop에서
+- **Data management:**
+
+## Hive DDL
+
+하이브는 CSV 형식의 파일을 효과적으로 적재하기 위한 CSV 서데를 제공한다.
+
+- Hive 0.14 버전부터 기본 지원
+  - [CSV 서데](https://cwiki.apache.org/confluence/display/Hive/CSV+Serde)를 이용하면  테이블 칼럼의 타입은 String 으로 고정
+
+* sepratorChar: 칼럼간의 구분자
+* quoteChar: 칼럼의 값을 지정한 문자로 묶어준다.
+* escapeChar: 칼럼에 데이터를 입력할 때 파싱하지 않고 무시
+
+```sql
+CREATE TABLE my_table
+(   
+   a string
+,   b string
+)
+ROW FORMAT SERDE
+'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+WITH SERDEPROPERTIES
+(   "separatorChar" = ","
+,   "quoteChar"     = "'"
+,   "escapeChar"    = "\\"
+)
+STORED AS TEXTFILE;
+```
+
+[참고한 게시글]
+
+- https://118k.tistory.com/451

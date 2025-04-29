@@ -1,0 +1,160 @@
+---
+title: Tableau Embedding
+category: Tableau
+thumbnail: /images/thumbnails/tableau.png
+date: 2023-03-01 00:20:40
+---
+
+# Tableau Server에서 설정
+
+- [Tableau Server에 신뢰할 수 있는 IP 주소 또는 호스트 이름 추가](https://help.tableau.com/current/server/ko-kr/trusted_auth_trustIP.htm)
+
+# [Tableau Embedding API Version 2](https://help.tableau.com/current/api/js_api/en-us/JavaScriptAPI/js_api_whats_new.htm)
+
+- [Tableau Rest API Java Github](https://github.com/datapainters/tableau-rest-java-library/blob/master/src/tabRest/tabRest.java)
+
+# [Tableau Embedding API Version 3](https://help.tableau.com/current/api/embedding_api/en-us/index.html)
+
+- [Tableau의 연결된 앱을 구성하여 내장된 콘텐츠에 대한 SSO 지원](https://help.tableau.com/current/server/ko-kr/connected_apps.htm)
+
+```shell tsm(Tableau Server Manager)
+cd /opt/tableau/tableau_server/
+tsm configuration get -k gateway.public.host
+#server.tableau.com
+tsm configuration get -k gateway.trusted
+#127.0.0.1, 127.0.0.2
+tsm configuration get -k gateway.trusted_hosts
+#server.tableau.com
+tsm configuration get -k gateway.public.port
+#443
+
+tsm configuration get -k vizportal.rest_api.cors.enabled
+#true
+tsm configuration get -k vizportal.rest_api.cors.allow_origin
+#https://127.0.0.1 https://server.tableau.com, https://127.0.0.2, https://web.tableau.com
+tsm configuration get -k wgserver.unrestricted_ticket
+#true
+tsm configuration get -k wgserver.clickjack_defense.enabled
+#false
+tsm configuration get -k vizportal.oauth.external_authorization_server.max_expiration_period_in_minutes
+#600
+
+tsm pending-changes apply
+```
+
+## Window
+
+1. hosts 파일 우클릭 > Code(으)로 열기 > 수정 > 저장 > "Failed to save 'hosts': Insufficient permissions.
+2. Select 'Retry as Admin' to retry as administrator."라는 알림창이 뜨면 [Retry as Admin...] 클릭 > Windows 명령 처리기 [예] 클릭
+
+```bash C:\Windows\System32\drivers\etc\hosts
+127.0.0.1 server.tableau.com
+127.0.0.2 web.tableau.com
+```
+
+## Mac
+
+```bash Mac(iterm, terminal)
+sudo vim /private/etc/hosts #i
+
+127.0.0.1 server.tableau.com
+127.0.0.2 web.tableau.com
+
+# :wq
+```
+
+> \*.tableau.com로 Domain 맞춰서 SameSite Error 해결
+
+## Python, Java, JavaScript로 구현
+
+> token이 제대로 됐는지 [https://jwt.io/](https://jwt.io/)에서 확인
+
+```python JSONWebToken.py
+import jwt
+token = jwt.encode(
+	{
+		"iss": connectedAppClientId,
+		"exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=5),
+		"jti": str(uuid.uuid4()),
+		"aud": "tableau",
+		"sub": user,
+		"scp": ["tableau:views:embed", "tableau:metrics:embed"]
+	},
+		connectedAppSecretKey,
+		algorithm = "HS256",
+		headers = {
+		'kid': connectedAppSecretId,
+		'iss': connectedAppClientId
+        }
+  )
+```
+
+```java JSONWebToken.java
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.*;
+import com.nimbusds.jwt.*;
+
+import java.util.*;
+
+...
+
+String secret = "secretvalue";
+	String kid = "connectedAppSecretId";
+	String clientId = "connectedAppClientId";
+	List<String> scopes = new
+ArrayList<>(Arrays.asList("tableau:views:embed"));
+	String username = "username";
+	JWSSigner signer = new MACSigner(secret);
+	JWSHeader header = new
+JWSHeader.Builder(JWSAlgorithm.HS256).keyID(kid).customParam("iss", clientId).build();
+	JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+		.issuer(clientId)
+		.expirationTime(new Date(new Date().getTime() + 60 * 1000)) //expires in 1 minute
+		.jwtID(UUID.randomUUID().toString())
+		.audience("tableau")
+		.subject(username)
+		.claim("scp", scopes)
+		.build();
+	SignedJWT signedJWT = new SignedJWT(header, claimsSet);
+	signedJWT.sign(signer);
+	model.addAttribute("token", signedJWT.serialize());
+```
+
+```javascript nest.js
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { v4 as uuid } from 'uuid';
+import * as config from 'config';
+
+const tableauConfig = config.get('tableau');
+
+@Injectable()
+export class TableauService {
+	constructor(private jwtService: JwtService) {}
+
+	async getTableauToken(username: string){
+		const token = await this.jwtService.sign(
+			{
+				iss: tableauConfig.connectedAppClientId,
+				aud: 'tableau',
+				jti: uuid(),
+				sub: username,
+				scp: [
+					'tableau:view:embed',
+					'tableau:views:embed_authoring',
+				],
+			},
+			{
+				header: {
+					alg: 'HS256',
+					kid: tableauConfig.connectedAppSecretId,
+					iss: tableauConfig.connectedAppClientId,
+				},
+				secret: tableauConfig.secretvalue,
+				expiresIn: '5m',
+			},
+		);
+		return token;
+	}
+}
+```
