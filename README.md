@@ -25,11 +25,6 @@ $ pnpm dev
 - [Next.js v15 (app Router)](https://nextjs.org/)
 - [TypeScript](https://www.typescriptlang.org/ko/)
 
-# ESLint + Prettier
-
-- [Biome](https://biomejs.dev/)
-  > Rust 기반의 빠른 올인원 린터 및 코드 포맷터 (구 Rome). ESLint 및 Prettier의 대안으로 주목받는 중
-
 ### Design
 
 - [Tailwind CSS v4](https://tailwindcss.com/)

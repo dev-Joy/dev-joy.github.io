@@ -11,6 +11,7 @@ export const ExternalLink = ({
 		<a
 			{...props}
 			target='_blank'
+			rel='noreferrer'
 			href={href.toString() || ""}
 			className='break-words text-blue-600 no-underline underline-offset-4 hover:underline dark:text-blue-300'
 		>
