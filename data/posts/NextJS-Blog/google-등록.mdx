@@ -1,0 +1,50 @@
+---
+title: Google 등록
+category: blog
+thumbnail: /images/thumbnails/google.webp
+date: 2025-04-29 22:50:27
+---
+
+## Google Adsense
+
+`public/ads.txt`파일 추가
+
+```ts
+import Script from 'next/script';
+import { FunctionComponent } from 'react';
+
+export const GoogleAdSense: FunctionComponent = () => {
+  return (
+    <Script
+      async
+      src=`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${YOUR_CA_PUB_ID}`
+      crossOrigin='anonymous'
+    />
+  );
+};
+```
+
+## Google Analytics & Google TagManger
+
+```ts {12,13}
+import { GoogleTagManager } from '@next/third-parties/google';
+import { GoogleAnalytics } from '@next/third-parties/google';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang='en'>
+      <body>{children}</body>
+      <GoogleTagManager gtmId='GTM-XYZ' />
+      <GoogleAnalytics gaId='G-XYZ' />
+    </html>
+  );
+}
+```
+
+## 참고
+
+- https://nextjs.org/docs/app/guides/third-party-libraries

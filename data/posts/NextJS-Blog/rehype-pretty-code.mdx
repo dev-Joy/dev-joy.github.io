@@ -1,0 +1,91 @@
+---
+title: Rehype Pretty Code - CSS Issue
+category: blog
+thumbnail: /images/thumbnails/rehype_pretty_code.png
+date: 2025-04-29 22:50:27
+---
+
+## Rehype Pretty Code - CSS Issue
+
+### Line Highlighting
+
+<Callout type='info'>
+  Line Highlighting이 되지 않는 이슈로 globals.css에서 @layer components 를
+  추가하였다.
+</Callout>
+
+```css globals. {1}
+@layer components {
+  code[data-theme*=' '],
+  code[data-theme*=' '] span {
+    color: var(--shiki-light);
+    background-color: var(--shiki-light-bg);
+  }
+
+@media (prefers-color-scheme: dark) {
+code[data-theme*=' '],
+code[data-theme*=' '] span {
+color: var(--shiki-dark);
+background-color: var(--shiki-dark-bg);
+}
+}
+
+code[data-line-numbers] {
+counter-reset: line;
+}
+
+code[data-line-numbers] > [data-line]::before {
+counter-increment: line;
+content: counter(line);
+@apply inline-block w-4 mr-4 text-right text-gray-500;
+}
+
+pre [data-line] {
+@apply px-4 border-l-2 border-l-transparent;
+}
+
+[data-highlighted-line] {
+background: oklch(0.8675 0.202 85.03 / 0.2);
+@apply border-l-blue-400;
+}
+
+[data-highlighted-chars] {
+@apply bg-zinc-600/50 rounded;
+box-shadow: 0 0 0 4px rgb(82 82 91 / 0.5);
+}
+
+[data-chars-id] {
+@apply shadow-none p-1 border-b-2;
+}
+
+[data-chars-id] span {
+@apply !text-inherit;
+}
+
+[data-chars-id='v'] {
+@apply !text-pink-300 bg-rose-800/50 border-b-pink-600 font-bold;
+}
+
+[data-chars-id='s'] {
+@apply !text-yellow-300 bg-yellow-800/50 border-b-yellow-600 font-bold;
+}
+
+[data-chars-id='i'] {
+@apply !text-purple-200 bg-purple-800/50 border-b-purple-600 font-bold;
+}
+
+[data-rehype-pretty-code-title] {
+@apply bg-zinc-700 text-zinc-200 rounded-t-lg py-2 px-3 font-semibold text-sm;
+}
+
+figure[data-rehype-pretty-code-figure]:has(> [data-rehype-pretty-code-title])
+pre {
+@apply !rounded-t-none;
+}
+
+```
+
+## 참고
+
+- https://github.com/rehype-pretty/rehype-pretty-code/blob/master/examples/next/src/app/globals.css
+- https://github.com/rehype-pretty/rehype-pretty-code/blob/master/examples/next/tailwind.config.js
