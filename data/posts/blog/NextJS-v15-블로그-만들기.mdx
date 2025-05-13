@@ -1,0 +1,563 @@
+---
+title: NextJS v15 블로그 만들기
+category: blog
+thumbnail: /images/thumbnails/nextJS.jpg
+date: 2025-05-02 16:50:27
+---
+
+## NextJS v15
+
+[Dynamic Routes](https://nextjs.org/docs/app/building-your-application/routing/dynamic-routes#good-to-know)
+
+- params prop은 Promise이기 때문에 값을 사용하려면 async/await 또는 React의 use 함수를 사용해야 합니다.
+- Next.js 14 이전 버전에서는 params가 동기적인 prop이었습니다. 하위 호환성을 위해 Next.js 15에서는 여전히 동기적으로 접근할 수 있지만, 이 방식은 향후에 제거될 예정입니다.
+- Dynamic Segment는 기존 pages 디렉토리에서 사용하던 Dynamic Route와 동일한 개념입니다.
+
+```ts title="app/blog/[slug]/page.tsx" {4, 6}
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  return <div>My Post: {slug}</div>;
+}
+```
+
+## Tailwindcss v4
+
+<Callout type='warn'>
+
+Tailwindcss v4 부터는 **tailwind.config.js** 파일이 사용되지 않는다!!
+
+</Callout>
+<Callout>
+Instead of a tailwind.config.js file, you can configure all of your customizations directly in the CSS file where you import Tailwind, giving you one less file to worry about in your project:
+
+tailwind.config.js 파일 대신 Tailwind를 가져오는 CSS 파일에서 모든 사용자 지정을 직접 구성할 수 있어 프로젝트에서 걱정할 파일이 하나 줄어듭니다:
+
+</Callout>
+
+<Callout>
+The new CSS-first configuration lets you do just about everything you could do in your tailwind.config.js file, including configuring your design tokens, defining custom utilities and variants, and more
+
+새로운 CSS 우선 설정을 통해 tailwind.config.js 파일에서 할 수 있는 거의 모든 작업을 수행할 수 있습니다. 여기에는 디자인 토큰 구성, 사용자 지정 유틸리티 및 변형 정의 등이 포함됩니다
+
+</Callout>
+**참고 사이트**
+- https://tailwindcss.com/blog/tailwindcss-v4#css-first-configuration
+
+### tailwindcss v4에서 plugin 적용방법
+
+```css globals.css {3} title="globals.css"
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin '@tailwindcss/typography';
+```
+
+<Callout type="info">
+don't forget the "@" sign!
+출처: https://github.com/tailwindlabs/tailwindcss/discussions/13292
+
+</Callout>
+
+### RGB와 HSL에서 OKLCH로 전환
+
+[왜 우리는 RGB와 HSL에서 OKLCH로 전환했을까요?](https://siosio3103.medium.com/%EC%99%9C-%EC%9A%B0%EB%A6%AC%EB%8A%94-rgb%EC%99%80-hsl%EC%97%90%EC%84%9C-oklch%EB%A1%9C-%EC%A0%84%ED%99%98%ED%96%88%EC%9D%84%EA%B9%8C%EC%9A%94-329816984db5)
+[OKLCH Color Picker & Converter](https://oklch.com/#0.7,0.1,247,100)에서 RGB와 HSL을 OKLCH로 전환할 수 있습니다.
+
+```css title="globals.css"
+:root {
+  --white: oklch(99.2% 0.005 230);
+  --black: oklch(18.8% 0.03 282);
+
+  --background: var(--white);
+  --foreground: var(--black);
+
+  --secondary: oklch(96.5% 0.012 235);
+  --secondary-foreground: oklch(23.5% 0.065 264);
+
+  --informative: oklch(92.3% 0.048 222);
+  --informative-foreground: var(--black);
+
+  --warning: oklch(93.8% 0.092 102);
+  --warning-foreground: var(--black);
+
+  --destructive: oklch(90.3% 0.084 18);
+  --destructive-foreground: var(--black);
+
+  --card: oklch(100% 0 0); /* white */
+  --card-foreground: oklch(23.5% 0.065 264); /* 222.2 84% 4.9% */
+
+  --popover: oklch(100% 0 0);
+  --popover-foreground: oklch(23.5% 0.065 264);
+
+  --primary: oklch(23.5% 0.065 264); /* 222.2 47.4% 11.2% */
+  --primary-foreground: oklch(99.2% 0.005 230);
+
+  --muted: oklch(96.5% 0.012 235);
+  --muted-foreground: oklch(64.8% 0.027 256);
+
+  --accent: oklch(96.5% 0.012 235);
+  --accent-foreground: oklch(23.5% 0.065 264);
+
+  --border: oklch(94.8% 0.014 245);
+  --input: oklch(94.8% 0.014 245);
+  --ring: oklch(23.5% 0.065 264);
+}
+```
+
+## 게시글 목록 페이지 (전체, 카테고리별)
+
+### 페이징
+
+[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)
+
+```ts
+// 허용된 param 외 접근시 404
+export const dynamicParams = false;
+```
+
+> - **true** (기본값): generateStaticParams에 포함되지 않은 다이내믹 세그먼트(dynamic segment)는 요청 시(on demand) 생성됩니다.
+> - **false**: generateStaticParams에 포함되지 않은 다이내믹 세그먼트는 404 페이지를 반환합니다.
+
+**참고 사이트**
+
+- [dynamicParams](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic)
+
+## 게시글 상세 페이지
+
+### Rehype Pretty Code - CSS Issue
+
+<Callout type='warn'>
+  globals.css에서 rehype pretty code의 css를 추가해주었습니다.
+</Callout>
+
+```css title="globals.css" {1}
+/* rehype-pretty-code */
+@layer components {
+  code {
+    background: var(--color-informative);
+  }
+
+  code[data-line-numbers] {
+    counter-reset: line;
+  }
+
+  code[data-line-numbers] > [data-line]::before {
+    counter-increment: line;
+    content: counter(line);
+    @apply inline-block w-4 mr-4 text-right text-gray-500;
+  }
+
+  pre [data-line] {
+    @apply px-4 border-l-2 border-l-transparent;
+  }
+
+  [data-highlighted-line] {
+    background: oklch(0.8675 0.202 85.03 / 0.2);
+    @apply border-l-blue-400;
+  }
+
+  [data-highlighted-chars] {
+    @apply bg-zinc-600/50 rounded;
+    box-shadow: 0 0 0 4px rgb(82 82 91 / 0.5);
+  }
+
+  [data-chars-id] {
+    @apply shadow-none p-1 border-b-2;
+  }
+
+  [data-chars-id] span {
+    @apply !text-inherit;
+  }
+
+  [data-chars-id='v'] {
+    @apply !text-pink-300 bg-rose-800/50 border-b-pink-600 font-bold;
+  }
+
+  [data-chars-id='s'] {
+    @apply !text-yellow-300 bg-yellow-800/50 border-b-yellow-600 font-bold;
+  }
+
+  [data-chars-id='i'] {
+    @apply !text-purple-200 bg-purple-800/50 border-b-purple-600 font-bold;
+  }
+
+  [data-rehype-pretty-code-title] {
+    @apply bg-zinc-700 text-zinc-200 rounded-t-lg py-2 px-3 font-semibold text-sm;
+  }
+
+  figure[data-rehype-pretty-code-figure]:has(> [data-rehype-pretty-code-title])
+    pre {
+    @apply !rounded-t-none;
+  }
+}
+```
+
+**참고 사이트**
+
+- [rehype-pretty-code/global.css](https://github.com/rehype-pretty/rehype-pretty-code/blob/master/examples/next/src/app/globals.css)
+- [rehype-pretty-code/tailwind.config.js](https://github.com/rehype-pretty/rehype-pretty-code/blob/master/examples/next/tailwind.config.js)
+- [rehype-pretty-code/highlight-lines](https://rehype-pretty.pages.dev/#highlight-lines)
+
+## 댓글 Giscus
+
+[giscus](https://giscus.app/ko)
+
+GitHub Discussions로 작동하는 댓글 시스템입니다.
+GitHub를 통해 웹사이트에 댓글과 반응을 남기게 해보세요!
+[utterances](https://github.com/utterance/utterances)에서 큰 영감을 받았습니다.
+
+**참고사이트**
+
+- [향로님 개발 블로그](https://jojoldu.tistory.com/704)
+
+## 다크/라이트 모드
+
+```shell
+# 설치
+pnpm add next-themes
+```
+
+```ts title="components/libraries/theme-provider.ts"
+'use client';
+
+import * as React from 'react';
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
+
+export function ThemeProvider({
+  children,
+  ...props
+}: React.ComponentProps<typeof NextThemesProvider>) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+}
+```
+
+```ts title="app/layout.tsx" {14}
+import './globals.css';
+import Header from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
+import { ThemeProvider } from '@/components/libraries/theme-provider';
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang='ko'
+      suppressHydrationWarning
+    >
+      <body>
+        <ThemeProvider
+          attribute='class'
+          defaultTheme='system'
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Header />
+          <main>{children}</main>
+          <Footer />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+```ts title="Header.tsx" {41, 44}
+'use client';
+
+import { useTheme } from 'next-themes';
+import Link from 'next/link';
+import { Button } from '../ui/button';
+import { HomeIcon } from '../../app/icon/home';
+import { SunIcon } from '../../app/icon/sun';
+import { MoonIcon } from '../../app/icon/moon';
+import { usePathname } from 'next/navigation';
+
+export default function Header() {
+  const pathname = usePathname();
+
+  return (
+    <header className='fixed z-40 flex w-full flex-col items-center justify-center border-b bg-background shadow-sm print:hidden'>
+      <nav className='mt-1 flex h-[64px] w-full max-w-[1200px] items-center justify-between px-4'>
+        <Link
+          href='/posts'
+          className={`${pathname === '/posts' ? 'underline' : ''}`}
+        >
+          <span className='font-bold hover:text-blue-600'>POSTS</span>
+        </Link>
+        <div className='flex items-center'>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+          >
+            <Link href='/'>
+              <HomeIcon />
+            </Link>
+          </Button>
+          <ThemeChanger />
+        </div>
+      </nav>
+    </header>
+  );
+}
+
+function ThemeChanger() {
+  const { setTheme, theme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  return (
+    <Button
+      type='button'
+      variant='ghost'
+      size='icon'
+      onClick={toggleTheme}
+    >
+      <SunIcon className='transition-all dark:hidden text-primary stroke-1' />
+      <MoonIcon className='hidden transition-all dark:block text-primary stroke-1' />
+      <span className='sr-only'>Toggle theme</span>
+    </Button>
+  );
+}
+```
+
+**참고 사이트**
+
+- [next-themes Github](https://github.com/pacocoursey/next-themes)
+
+## 목차 사이드바 (TOC, Table Of Content)
+
+```ts title="useHeadingsObserver.ts"
+import { useEffect, useRef, useState } from 'react';
+
+export const useHeadingsObserver = (query: string) => {
+  const observer = useRef<IntersectionObserver | null>(null);
+  const [activeIdList, setActiveIdList] = useState<string[]>([]);
+  const [tempId, setTempId] = useState('');
+
+  useEffect(() => {
+    const scrollMarginOption = { rootMargin: '-32px 0px -80px 0px' };
+
+    const handleObserver: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
+        const targetId = `#${entry.target.id}`;
+        if (entry.isIntersecting) {
+          setActiveIdList((prev) => [...prev, targetId]);
+          setTempId(() => '');
+        } else {
+          setActiveIdList((prev) => {
+            if (prev.length === 1) setTempId(targetId);
+            return prev.filter((elem) => elem !== targetId);
+          });
+        }
+      });
+    };
+
+    observer.current = new IntersectionObserver(
+      handleObserver,
+      scrollMarginOption
+    );
+
+    const elements = document.querySelectorAll(query);
+    elements.forEach((elem) => observer.current?.observe(elem));
+
+    return () => observer.current?.disconnect();
+  }, [query]);
+
+  return [...activeIdList, tempId];
+};
+```
+
+```ts title="TableOfContentSidebar.tsx" {23}
+'use client';
+
+import { useHeadingsObserver } from '@/hook/useHeadingObserver';
+import { cn } from '@/lib/utils';
+import { HeadingItem } from '@/service/types';
+import Link from 'next/link';
+
+interface Props {
+  toc: HeadingItem[];
+}
+
+export default function TableOfContentSidebar({ toc }: Props) {
+  const activeIdList = useHeadingsObserver('h2, h3');
+
+  return (
+    <aside className='not-prose absolute -top-[200px] left-full -mb-[100px] hidden h-[calc(100%+150px)] xl:block '>
+      <div className='sticky bottom-0  top-[200px] z-10 ml-[5rem] mt-[200px] w-[200px]'>
+        <div className='mb-4 border-l px-4 py-2'>
+          <div className='mb-1 font-bold'>On this page</div>
+          <ul className='text-xs'>
+            {toc.map((item) => {
+              const isH3 = item.indent === 1;
+              const isIntersecting = activeIdList.includes(item.link);
+              return (
+                <li
+                  key={item.link}
+                  className={cn(
+                    isH3 && 'ml-4',
+                    isIntersecting &&
+                      'font-medium text-blue-600 dark:text-blue-300',
+                    'py-1 transition'
+                  )}
+                >
+                  <Link href={item.link}>{item.text}</Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+    </aside>
+  );
+}
+```
+
+**참고 사이트**
+
+- https://developer.mozilla.org/ko/docs/Web/API/Intersection_Observer_API
+- https://github.com/d5br5/nextjs-tailwind-blog
+
+## 검색 엔진 최적화 (SEO)
+
+```ts title="app/layout.tsx"
+export const metadata: Metadata = {
+  title: {
+    default: '김주희 블로그',
+    template: '%s | 김주희 블로그',
+  },
+  description: '김주희 개발 블로그',
+  icons: {
+    icon: `/favicon.ico`,
+  },
+  openGraph: {
+    title: '김주희 블로그',
+    description: '김주희 개발 블로그',
+    siteName: '김주희 블로그',
+    images: '/images/og-img.png',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '김주희 블로그',
+    description: '김주희 개발 블로그',
+    images: '/images/og-img.png',
+  },
+};
+```
+
+```ts title="app/posts/page.tsx"
+import PostGrid from '@/components/post_list/PostGrid';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'All Posts',
+  description: '공유하고 싶은 기술이나 에러 해결방법을 정리합니다.',
+};
+
+export default async function PostsPage() {
+  return <PostGrid />;
+}
+```
+
+**app/layout.tsx**의 title '%s | 김주희 블로그' 부분이
+**app/posts/page.tsx**의 title 값이 들어가서 아래 사진 처럼 적용되어 보입니다.
+
+![MetaData적용](/posts/NextJs-v15-블로그-만들기/metadata.png)
+
+> sitemap.xml을 만들어서 Google Search Console 등록시 검색이 잘되게 만들어줍니다.
+
+```ts
+import { getSitemapPostList } from '@/service/posts';
+import { MetadataRoute } from 'next';
+export const dynamic = 'force-static';
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const postList = await getSitemapPostList();
+  const baseUrl = 'https://dev-joy.github.io';
+  return [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+    },
+    ...postList,
+  ];
+}
+```
+
+**참고 사이트**
+
+- [generateMetadata](https://nextjs.org/docs/app/api-reference/functions/generate-metadata#template)
+- [sitemap.xml](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)
+
+## Reading time
+
+```shell
+# 설치
+pnpm add reading-time
+```
+
+```ts
+import readingTime from 'reading-time';
+
+const readingMinutes = readingTime(text).minutes;
+```
+
+**참고 사이트**
+
+- [reading-time github](https://github.com/ngryman/reading-time)
+
+## Google Third party
+
+### 1. Google Adsense
+
+> **public/ads.txt 파일 추가**
+
+```ts title="GoogleAdsense.tsx"
+import Script from 'next/script';
+import { FunctionComponent } from 'react';
+
+export const GoogleAdSense: FunctionComponent = () => {
+  return (
+    <Script
+      async
+      src=`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${YOUR_CA_PUB_ID}`
+      crossOrigin='anonymous'
+    />
+  );
+};
+```
+
+### 2. Google Analytics & Google TagManger
+
+```ts {12,13} title="layout.tsx"
+import { GoogleTagManager } from '@next/third-parties/google';
+import { GoogleAnalytics } from '@next/third-parties/google';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang='en'>
+      <body>{children}</body>
+      <GoogleTagManager gtmId='GTM-XYZ' />
+      <GoogleAnalytics gaId='G-XYZ' />
+    </html>
+  );
+}
+```
+
+**참고 사이트**
+
+- [NextJS third party libraries](https://nextjs.org/docs/app/guides/third-party-libraries)
