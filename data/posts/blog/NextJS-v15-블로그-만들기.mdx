@@ -107,11 +107,37 @@ don't forget the "@" sign!
 }
 ```
 
-## 게시글 목록 페이지 (전체, 카테고리별)
+## 1. 게시글 목록 페이지 (전체, 카테고리별)
 
 ### 페이징
 
-[Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)
+<Callout type="info">
+
+https://dev-joy.github.io/?page=2
+
+QueryString으로 Page를 받아와서 표시하기 위해
+route.ts를 이용하였습니다.
+
+</Callout>
+
+```ts title="/api/posts/route.ts"
+import { getSortedPostList } from '@/service/posts';
+
+export const revalidate = 60;
+
+export async function GET() {
+  const posts = await getSortedPostList();
+  return new Response(JSON.stringify(posts), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+```
+
+**참고 사이트**
+
+- [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)
+
+## 2. 게시글 상세
 
 ```ts
 // 허용된 param 외 접근시 404
@@ -124,8 +150,6 @@ export const dynamicParams = false;
 **참고 사이트**
 
 - [dynamicParams](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic)
-
-## 게시글 상세 페이지
 
 ### Rehype Pretty Code - CSS Issue
 
@@ -201,7 +225,7 @@ export const dynamicParams = false;
 - [rehype-pretty-code/tailwind.config.js](https://github.com/rehype-pretty/rehype-pretty-code/blob/master/examples/next/tailwind.config.js)
 - [rehype-pretty-code/highlight-lines](https://rehype-pretty.pages.dev/#highlight-lines)
 
-## 댓글 Giscus
+## 3. 댓글 Giscus
 
 [giscus](https://giscus.app/ko)
 
@@ -213,7 +237,7 @@ GitHub를 통해 웹사이트에 댓글과 반응을 남기게 해보세요!
 
 - [향로님 개발 블로그](https://jojoldu.tistory.com/704)
 
-## 다크/라이트 모드
+## 4. 다크/라이트 모드
 
 ```shell
 # 설치
@@ -333,7 +357,7 @@ function ThemeChanger() {
 
 - [next-themes Github](https://github.com/pacocoursey/next-themes)
 
-## 목차 사이드바 (TOC, Table Of Content)
+## 5. 목차 사이드바 (TOC, Table Of Content)
 
 ```ts title="useHeadingsObserver.ts"
 import { useEffect, useRef, useState } from 'react';
@@ -427,7 +451,7 @@ export default function TableOfContentSidebar({ toc }: Props) {
 - https://developer.mozilla.org/ko/docs/Web/API/Intersection_Observer_API
 - https://github.com/d5br5/nextjs-tailwind-blog
 
-## 검색 엔진 최적화 (SEO)
+## 6. 검색 엔진 최적화 (SEO)
 
 ```ts title="app/layout.tsx"
 export const metadata: Metadata = {
@@ -499,7 +523,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 - [generateMetadata](https://nextjs.org/docs/app/api-reference/functions/generate-metadata#template)
 - [sitemap.xml](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)
 
-## Reading time
+## 7. Reading time
 
 ```shell
 # 설치
@@ -516,9 +540,9 @@ const readingMinutes = readingTime(text).minutes;
 
 - [reading-time github](https://github.com/ngryman/reading-time)
 
-## Google Third party
+## 8. Google Third party
 
-### 1. Google Adsense
+### Google Adsense
 
 > **public/ads.txt 파일 추가**
 
@@ -537,7 +561,7 @@ export const GoogleAdSense: FunctionComponent = () => {
 };
 ```
 
-### 2. Google Analytics & Google TagManger
+### Google Analytics & Google TagManger
 
 ```ts {12,13} title="layout.tsx"
 import { GoogleTagManager } from '@next/third-parties/google';

@@ -28,7 +28,8 @@ const CopyLinkButton = ({
     setCopied(false);
   });
 
-  const successToast = () => toast.success('Successfully Copied');
+  const successToast = () =>
+    toast.success('Successfully Copied', { duration: 500 });
 
   const failToast = () => toast.error('Copy Failed');
 
