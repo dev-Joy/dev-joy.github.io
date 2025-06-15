@@ -1,0 +1,377 @@
+---
+title: React Hook Form
+category: frontend
+thumbnail: /images/thumbnails/react-hook-form.png
+date: 2025-06-08 14:00:27
+---
+
+## 1. React Hook Form을 선택한 이유
+
+|                    | React Hook Form                                                                                                                                                                                                   | Formik                                                                                                            | Redux Form                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **Component**      | [uncontrolled](https://legacy.reactjs.org/docs/uncontrolled-components.html) & [controlled](https://legacy.reactjs.org/docs/forms.html)                                                                           | [controlled](https://legacy.reactjs.org/docs/forms.html)                                                          | [controlled](https://legacy.reactjs.org/docs/forms.html)                               |
+| **Rendering**      | minimum re-render and optimise computation                                                                                                                                                                        | minimum re-render and optimise computation re-render according to local state changes (As you type in the input.) | re-render according to state management lib (Redux) changes (As you type in the input. |
+| **API**            | Hooks                                                                                                                                                                                                             | Component (RenderProps, Form, Field) + Hooks                                                                      | Component (RenderProps, Form, Field)                                                   |
+| **Package size**   | Small <br/> react-hook-form@7.27.0 <br/> **8.5KB**                                                                                                                                                                | Medium <br/> formik@2.1.4 <br/> **15KB**                                                                          | Large <br/> redux-form@8.3.6+ <br/> **26.4KB**                                         |
+| **Validation**     | Built-in, [Yup](https://github.com/jquense/yup), [Zod](https://github.com/colinhacks/zod), [Joi](https://github.com/hapijs/joi), [Superstruct](https://github.com/ianstormtaylor/superstruct) and build your own. | Build yourself or [Yup](https://github.com/jquense/yup)                                                           | Build yourself or Plugins                                                              |
+| **Learning curve** | Low to Medium                                                                                                                                                                                                     | Medium                                                                                                            | Medium                                                                                 |
+
+출처: [React Hook Form vs Formik vs Redux Form](https://www.react-hook-form.com/faqs/#ReactHookFormFormikorReduxForm)
+
+## 2. React Hook Form 특징
+
+- **DX(개발자 경험)**: 직관적이고 기능이 완비된 API를 제공하여, 개발자가 폼을 구현할 때 일관되고 매끄러운 경험을 할 수 있도록 돕습니다.
+- **HTML standard(HTML 표준 준수)**:기존 HTML 마크업을 그대로 활용할 수 있으며, 제약 조건 기반의 유효성 검사 API를 통해 폼을 검증할 수 있습니다. 즉, `required`, `minLength`, `pattern` 같은 HTML 속성과 자연스럽게 통합됩니다.
+- **Super Light(초경량)**: 패키지 사이즈는 중요하지 않다. React Hook Form은 작은 라이브러리고 아무 디펜더시없다.
+- **Performance(성능 최적화)**: 불필요한 리렌더링을 최소화하고, 유효성 검사 연산을 줄이며, 컴포넌트 마운트 속도를 빠르게 유지합니다.
+- **Adoptable(도입 용이성)**: 폼 상태는 기본적으로 지역(local) 상태이므로, 별도의 상태 관리 라이브러리 없이도 쉽게 도입하고 사용할 수 있습니다.
+- **UX(사용자 경험)**: 일관된 유효성 검사 전략과 함께 최고의 사용자 경험을 제공하기 위해 설계되었습니다. 예를 들어, 실시간 검증 피드백이나 오류 메시지 제어가 쉬운 구조를 가지고 있습니다.
+
+**Isolate Re-renders**
+
+- 컴포넌트의 리렌더링을 개별적으로 분리할 수 있어, 페이지나 앱의 전반적인 성능이 향상됩니다.
+
+**Subscription**
+
+- 폼 구축에서 성능은 사용자 경험의 핵심 요소입니다. React Hook Form은 개별 입력 필드나 폼 상태에 선택적으로 구독할 수 있도록 하여, 전체 폼을 리렌더링하지 않고도 상태 변화를 감지할 수 있습니다.
+
+**Faster Mounting**
+
+- React Hook Form은 다른 라이브러리에 비해 컴포넌트의 마운트 속도가 훨씬 빠릅니다. 공식 문서에서는 이를 실제 벤치마크 스크린샷으로 비교하여 보여줍니다.
+  이는 경량성과 uncontrolled 기반 구조 덕분입니다.
+
+## 3. 설치 방법
+
+```shell
+npm install react-hook-form
+```
+
+```ts
+import ReactDOM from 'react-dom';
+import { useForm, SubmitHandler } from 'react-hook-form';
+
+enum GenderEnum {
+  female = 'female',
+  male = 'male',
+  other = 'other',
+}
+
+interface IFormInput {
+  firstName: String;
+  gender: GenderEnum;
+}
+
+export default function App() {
+  const { register, handleSubmit } = useForm<IFormInput>();
+  const onSubmit: SubmitHandler<IFormInput> = (data) => console.log(data);
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <label>First Name</label>
+      <input {...register('firstName', { required: true, maxLength: 20 })} />
+      <label>Last Name</label>
+      <input {...register("lastName", { pattern: /^[A-Za-z]+$/i })}
+      <label>Age</label>
+      <input type="number" {...register("age", { min: 18, max: 99 })} />
+      <label>Gender Selection</label>
+      <select {...register('gender')}>
+        <option value='female'>female</option>
+        <option value='male'>male</option>
+        <option value='other'>other</option>
+      </select>
+      <input type='submit' />
+    </form>
+  );
+}
+```
+
+input 태그를 이용해서 1,234로 표시하고 값을 넘길 때에는 1234로 보내기 위해서 아래와 같이 코드를 작성했다.
+
+```ts title="Input.tsx"
+'use client';
+
+import React from 'react';
+import {
+  FieldValues,
+  Path,
+  UseFormRegisterReturn,
+  UseFormSetValue,
+} from 'react-hook-form';
+import {
+  ErrorText,
+  FormGroup,
+  FormLabel,
+  FormInput,
+  UnitWrapper,
+  UnitLabel,
+  FormTextCount,
+  FormRequired,
+  FormFooterRow,
+  ClearButton,
+} from '@/app/ui/form';
+import Clear from '@/app/icon/clear';
+
+interface BaseProps<T extends FieldValues> {
+  label: string;
+  type: 'text' | 'number';
+  required?: boolean;
+  placeholder?: string;
+  error?: string;
+  register?: UseFormRegisterReturn;
+  setValue?: UseFormSetValue<T>;
+}
+
+interface TextInputProps<T extends FieldValues> extends BaseProps<T> {
+  type: 'text';
+  maxLength?: number;
+  value: string;
+}
+
+interface NumberInputProps<T extends FieldValues> extends BaseProps<T> {
+  type: 'number';
+  value: string | number | undefined;
+  id: string;
+  unit?: string;
+  maxNum?: number;
+  onChange: (value: string | number) => void;
+}
+
+type Props<T extends FieldValues> = TextInputProps<T> | NumberInputProps<T>;
+
+export default function Input<T extends FieldValues>(props: Props<T>) {
+  const { label, type, required, placeholder, error, setValue, register } =
+    props;
+
+  const id = props?.register?.name ?? ('id' in props ? props.id : undefined);
+
+  const allowOnlyNumberKeys = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const isNumberKey = /^[0-9]$/.test(e.key);
+    const allowedKeys = ['ArrowLeft', 'ArrowRight', 'Tab', 'Backspace'];
+    if (!isNumberKey && !allowedKeys.includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleNumber = (fieldOnChange: (value: number) => void) => {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value.replace(/,/g, '');
+      let numeric = Number(raw);
+
+      if (isNaN(numeric)) numeric = 0;
+      if (props.type === 'number' && props.maxNum !== undefined) {
+        numeric = Math.min(numeric, props.maxNum);
+      }
+      fieldOnChange(numeric);
+    };
+  };
+
+  const fieldName = (register?.name ?? id) as Path<T> | undefined;
+
+  const handleClear = () => {
+    if (setValue && fieldName) {
+      const defaultValue = '' as T[typeof fieldName];
+
+      setValue(fieldName, defaultValue, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    }
+
+    if (props.type === 'number') {
+      props.onChange('');
+    }
+  };
+
+  const renderNumberInput = () => {
+    if (props.type !== 'number') return null;
+    const { value, onChange, unit } = props;
+    return (
+      <>
+        <UnitWrapper>
+          <FormInput
+            {...register}
+            id={id}
+            $hasError={!!error}
+            type='text'
+            value={value?.toLocaleString() ?? ''}
+            placeholder={placeholder}
+            onChange={handleNumber(onChange)}
+            onKeyDown={allowOnlyNumberKeys}
+          />
+          {value !== undefined && value !== null && value !== '' && (
+            <ClearButton
+              onClick={handleClear}
+              $IsNumber={true}
+            >
+              <Clear />
+            </ClearButton>
+          )}
+
+          {unit && <UnitLabel>{unit}</UnitLabel>}
+        </UnitWrapper>
+        {error && <ErrorText>{error}</ErrorText>}
+      </>
+    );
+  };
+
+  const renderTextInput = () => {
+    if (props.type !== 'text') return null;
+    const { value, placeholder, maxLength } = props;
+    return (
+      <>
+        <FormInput
+          {...register}
+          id={id}
+          $hasError={!!error}
+          placeholder={placeholder}
+          maxLength={maxLength}
+        />
+        {value && (
+          <ClearButton onClick={handleClear}>
+            <Clear />
+          </ClearButton>
+        )}
+
+        <FormFooterRow $hasError={!!error}>
+          {error && <ErrorText>{error}</ErrorText>}
+          {maxLength && (
+            <FormTextCount>
+              {value?.length ?? 0}/{maxLength}
+            </FormTextCount>
+          )}
+        </FormFooterRow>
+      </>
+    );
+  };
+
+  return (
+    <FormGroup>
+      <FormLabel htmlFor={id}>
+        {label} {required && <FormRequired>[필수]</FormRequired>}
+      </FormLabel>
+      {type === 'number' ? renderNumberInput() : renderTextInput()}
+    </FormGroup>
+  );
+}
+```
+
+## 4. useWatch vs watch
+
+<Callout type='info'>
+  watch API와 유사하게 동작하지만, 이 방식은 사용자 정의 훅(custom hook)
+  수준에서 리렌더링을 분리하기 때문에, 애플리케이션에서 더 나은 성능을 낼 수
+  있습니다.
+</Callout>
+출처: [useWatch API](https://www.react-hook-form.com/api/usewatch/)
+
+**useWatch**
+
+- 단위 컴포넌트 내에서만 리렌더링 합니다.
+- subscription 기반으로 동작
+- 해당 필드 값이 변경될 때만 리렌더링 발생
+- 필드 별로 독립적인 구독 시스템 적용
+- 메모이제이션을 통한 성능 최적화화
+
+<Callout type='info'>
+  이벤트 리스너를 통해 모든 입력 필드 또는 지정된 입력 필드의 변경 사항을
+  구독하며, 구독된 필드에 따라 리렌더링이 발생합니다.
+</Callout>
+출처: [watch vs getValues vs state](https://react-hook-form.com/faqs#question9)
+
+**watch**
+
+- 모든 폼 컴포넌트를 리렌더링합니다.
+- watch 함수는 내부적으로 Observable 패턴을 사용합니다
+- 폼 필드의 값이 변경될 때마다 리렌더링을 트리거합니다
+- subscription 메커니즘을 통해 필드 값의 변화를 추적합니다
+
+값 변화를 조회만 하고 싶다면 **watch**, 리렌더링을 통해 동적으로 UI를 업데이트하고 싶다면 **useWatch**를 사용하는 것이 최적의 접근 방식
+
+## 5. Controller, Register
+
+**Controller**
+
+- 주로 외부 라이브러리와 통합할 때 유용
+- 외부 라이브러리와의 연동이 간편하며, 컴포넌트 간의 상태를 쉽게 전달
+- 큰 규모의 폼이나 동적인 상황에서 Controller는 렌더링 성능에 유리
+- 외부 라이브러리와의 통합에 유리하나, 사용자 정의 요소에 적용하기 어려움
+
+```ts title="Integrating Controlled Inputs"
+import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import { TextField, Checkbox } from '@material-ui/core';
+
+interface IFormInputs {
+  TextField: string;
+  MyCheckbox: boolean;
+}
+
+function App() {
+  const { handleSubmit, control, reset } = useForm<IFormInputs>({
+    defaultValues: {
+      MyCheckbox: false,
+    },
+  });
+  const onSubmit: SubmitHandler<IFormInputs> = (data) => console.log(data);
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name='MyCheckbox'
+        control={control}
+        rules={{ required: true }}
+        render={({ field }) => <Checkbox {...field} />}
+      />
+      <input type='submit' />
+    </form>
+  );
+}
+```
+
+**Register**
+
+- 직접적으로 폼 요소를 등록할 때 사용
+- 직접적인 등록으로 렌더링 효율이 높음
+- 작은 규모의 폼에서는 Register가 직접적으로 등록되어 렌더링 성능이 우수
+- 직접적인 등록으로 자유도가 높으며, 사용자 정의 요소에 적용 가능
+
+```ts title="Register fields"
+import ReactDOM from 'react-dom';
+import { useForm, SubmitHandler } from 'react-hook-form';
+
+enum GenderEnum {
+  female = 'female',
+  male = 'male',
+  other = 'other',
+}
+
+interface IFormInput {
+  firstName: string;
+  gender: GenderEnum;
+}
+
+export default function App() {
+  const { register, handleSubmit } = useForm<IFormInput>();
+  const onSubmit: SubmitHandler<IFormInput> = (data) => console.log(data);
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <label>First Name</label>
+      <input {...register('firstName')} />
+      <label>Gender Selection</label>
+      <select {...register('gender')}>
+        <option value='female'>female</option>
+        <option value='male'>male</option>
+        <option value='other'>other</option>
+      </select>
+      <input type='submit' />
+    </form>
+  );
+}
+```
+
+**참고 사이트**
+
+- [React Hook Form](https://www.react-hook-form.com/)
+- [React Hook Form 실무 도입기, 그리고 Best Practice 탐구](https://velog.io/@imnotpizza/%EA%B8%B0%EB%A1%9DReact-Hook-Form-%EC%8B%A4%EB%AC%B4-%EB%8F%84%EC%9E%85%EA%B8%B0)
+- [React-hook-form에서 watch 와 useWatch](https://velog.io/@hansw98/React-hook-form%EC%97%90%EC%84%9C-watch-%EC%99%80-useWatch)
+- [React Hook Form의 Controller와 Register 함수: 활용 방법 및 비교](https://toby2009.tistory.com/56)
