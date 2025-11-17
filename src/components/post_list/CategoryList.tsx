@@ -33,7 +33,7 @@ export default function CategoryList({
       <section className='mb-10 hidden sm:block'>
         <ul className='flex gap-3'>
           <CategoryButton
-            href='/blog'
+            href='/posts'
             isCurrent={selectedCategory === 'all'}
             displayName='All'
             count={allPostCount}
@@ -41,7 +41,7 @@ export default function CategoryList({
           {categoryList.map(({ category, count }) => (
             <CategoryButton
               key={category}
-              href={`/${category}`}
+              href={`/posts/${category}`}
               displayName={category}
               isCurrent={category === selectedCategory}
               count={count}
